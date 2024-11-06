@@ -25,9 +25,9 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-      # - name: Create .env file
-      #   run: |
-      #     printf "%s\n" "${{ secrets.ENV }}" > .env
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV }}" >> .env
       - name: Build Docker image
         run: docker build -t rizka446/cicd:1.0.0 .
       - name: Docker Hub login
@@ -47,7 +47,7 @@ jobs:
         EC2_USER: ${{secrets.USERNAME}}
 
     steps:
-        - name: Check out the code
+        - name: Checkout the code
           uses: actions/checkout@v2
 
         - name: Create PEM file from secret
@@ -58,15 +58,21 @@ jobs:
         - name: Deploy to EC2
           run: |
             ssh -i ec2-key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
-                # Stop the current container if running
-                sudo docker ps -q --filter "name=my-container" | grep -q . && sudo docker stop my-container || true
-                sudo docker rm my-container || true
+              # Cek apakah container dengan nama "my-container" ada
+              sudo docker ps -q --filter "name=my-container" | grep -q . && sudo docker stop my-container || true
+              sudo docker rm my-container || true
 
-                # Pull the latest image from Docker Hub
-                sudo docker pull $IMAGE_URI
-                
-                # Run the new container
-                sudo docker run -d --name my-container -p 8000:8000 $IMAGE_URI
+              # Pastikan IMAGE_URI sudah terisi dengan benar
+              if [ -z "$IMAGE_URI" ]; then
+                echo "ERROR: IMAGE_URI is not set!"
+                exit 1
+              fi
+
+              # Pull image terbaru dari Docker Hub
+              sudo docker pull $IMAGE_URI
+
+              # Jalankan container dengan image terbaru
+              sudo docker run -d --name my-container -p 8000:8000 $IMAGE_URI
             EOF
 
         - name: Clean up PEM file
