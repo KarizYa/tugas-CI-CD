@@ -25,9 +25,9 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-      - name: Create .env file
-        run: |
-          printf "%s\n" "${{ secrets.ENV }}" > .env
+      # - name: Create .env file
+      #   run: |
+      #     printf "%s\n" "${{ secrets.ENV }}" > .env
       - name: Build Docker image
         run: docker build -t rizka446/cicd:1.0.0 .
       - name: Docker Hub login
