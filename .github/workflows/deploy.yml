@@ -57,22 +57,25 @@ jobs:
 
         - name: Deploy to EC2
           run: |
-            ssh -i ec2-key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
-              # Cek apakah container dengan nama "my-container" ada
+            ssh -i ec2-key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
+              # Ekspor IMAGE_URI ke lingkungan shell
+              export IMAGE_URI=$IMAGE_URI
+
+              # Cek apakah container dengan nama "my-container" ada dan hentikan jika ada
               sudo docker ps -q --filter "name=my-container" | grep -q . && sudo docker stop my-container || true
               sudo docker rm my-container || true
 
               # Pastikan IMAGE_URI sudah terisi dengan benar
-              if [ -z "$IMAGE_URI" ]; then
+              if [ -z "\$IMAGE_URI" ]; then
                 echo "ERROR: IMAGE_URI is not set!"
                 exit 1
               fi
 
               # Pull image terbaru dari Docker Hub
-              sudo docker pull $IMAGE_URI
+              sudo docker pull \$IMAGE_URI
 
               # Jalankan container dengan image terbaru
-              sudo docker run -d --name my-container -p 8000:8000 $IMAGE_URI
+              sudo docker run -d --name my-container -p 8000:8000 \$IMAGE_URI
             EOF
 
         - name: Clean up PEM file
